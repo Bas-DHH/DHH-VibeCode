@@ -43,6 +43,9 @@ class RegisteredBusinessController extends Controller
                 'trial_ends_at' => $now->copy()->addDays(14),
             ]);
 
+            // Update user with business_id
+            $user->update(['business_id' => $business->id]);
+
             DB::commit();
 
             event(new Registered($user));

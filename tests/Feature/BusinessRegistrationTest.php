@@ -84,4 +84,33 @@ class BusinessRegistrationTest extends TestCase
 
         $response->assertSessionHasErrors('password');
     }
+
+    public function test_user_is_created_with_admin_role_and_linked_to_business(): void
+    {
+        $response = $this->post('/register-business', [
+            'business_name' => 'Test Business',
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('admin.dashboard'));
+
+        // Assert business was created
+        $this->assertDatabaseHas('businesses', [
+            'business_name' => 'Test Business',
+        ]);
+
+        $business = Business::where('business_name', 'Test Business')->first();
+        
+        // Assert user was created with admin role and linked to business
+        $this->assertDatabaseHas('users', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'role' => 'admin',
+            'business_id' => $business->id,
+        ]);
+    }
 } 
