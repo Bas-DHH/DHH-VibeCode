@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Task extends Model
 {
@@ -21,6 +22,7 @@ class Task extends Model
         'frequency',
         'due_date',
         'completed_at',
+        'user_id',
     ];
 
     /**
@@ -32,4 +34,12 @@ class Task extends Model
         'due_date' => 'date',
         'completed_at' => 'datetime',
     ];
+
+    /**
+     * Get the user that owns the task.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
@@ -33,6 +34,7 @@ class TaskFactory extends Factory
             'frequency' => $this->faker->randomElement($frequencies),
             'due_date' => $dueDate,
             'completed_at' => $completedAt,
+            'user_id' => User::factory(),
         ];
     }
 } 

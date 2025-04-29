@@ -58,6 +58,40 @@ DHH MVP is designed to help hospitality businesses maintain and track essential 
    npm run dev
    ```
 
+## UI Components
+
+The application uses shadcn/ui components for a consistent and modern look. Key components include:
+
+### Card Component
+Used for displaying grouped tasks by category. Features:
+- Responsive design
+- Customizable header and content
+- Support for badges and icons
+- Consistent spacing and typography
+
+Example usage:
+```jsx
+<Card>
+  <CardHeader>
+    <CardTitle>Category Title</CardTitle>
+  </CardHeader>
+  <CardContent>
+    {/* Content */}
+  </CardContent>
+</Card>
+```
+
+### Badge Component
+Used for displaying task counts and status indicators. Features:
+- Multiple variants (default, secondary, destructive, outline)
+- Responsive design
+- Consistent styling with the theme
+
+Example usage:
+```jsx
+<Badge variant="secondary">5 tasks</Badge>
+```
+
 ## Current Features
 
 ### Task Management
@@ -92,11 +126,42 @@ dhh-mvp/
 ├── resources/
 │   ├── js/               # React components and pages
 │   │   ├── Components/   # Reusable components
+│   │   │   └── ui/      # shadcn/ui components
 │   │   └── Pages/        # Inertia page components
+│   ├── lib/              # Utility functions
 │   └── css/              # Stylesheets
 ├── routes/               # Application routes
 └── tests/                # Test files
 ```
+
+## Layout Conventions
+
+The application uses `AuthenticatedLayout` as the default layout for all user-facing pages. This layout provides:
+
+- Authentication handling
+- Navigation menu
+- User profile dropdown
+- Responsive design
+- Proper routing integration
+
+Example usage in a page component:
+```jsx
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
+
+const MyPage = () => {
+    return (
+        <AuthenticatedLayout>
+            <Head title="Page Title" />
+            {/* Page content */}
+        </AuthenticatedLayout>
+    );
+};
+
+export default MyPage;
+```
+
+Use this layout for all pages that require authentication and navigation. Only use alternative layouts when explicitly specified.
 
 ## Contributing
 
