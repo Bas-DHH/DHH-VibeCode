@@ -58,6 +58,36 @@ DHH MVP is designed to help hospitality businesses maintain and track essential 
    npm run dev
    ```
 
+## Current Features
+
+### Business Registration
+- **Model**: `Business` with fields for business_name, created_by, trial_starts_at, and trial_ends_at
+- **Registration Flow**:
+  - Create a new business with unique business name
+  - Create an admin user for the business
+  - Set up 14-day trial period
+  - Automatic login after registration
+- **Validation Rules**:
+  - Business name must be unique
+  - Email must be unique
+  - Password must be confirmed
+  - All fields are required
+- **Security**:
+  - Password hashing
+  - Database transactions
+  - Proper error handling
+
+### Task Management
+- **Model**: `Task` with fields for title, status, category, frequency, due date, and completion tracking
+- **Categories**: temperature, goods_receiving, cooking, verification, cleaning
+- **Statuses**: pending, done, overdue
+- **Frequencies**: daily, weekly, monthly
+
+### Development Tools
+- Factory for generating test tasks
+- Seeder for populating the database with example data
+- Comprehensive migration with field comments
+
 ## UI Components
 
 The application uses shadcn/ui components for a consistent and modern look. Key components include:
@@ -92,19 +122,6 @@ Example usage:
 <Badge variant="secondary">5 tasks</Badge>
 ```
 
-## Current Features
-
-### Task Management
-- **Model**: `Task` with fields for title, status, category, frequency, due date, and completion tracking
-- **Categories**: temperature, goods_receiving, cooking, verification, cleaning
-- **Statuses**: pending, done, overdue
-- **Frequencies**: daily, weekly, monthly
-
-### Development Tools
-- Factory for generating test tasks
-- Seeder for populating the database with example data
-- Comprehensive migration with field comments
-
 ## Development Conventions
 
 Please refer to `.cursorrules` for detailed development guidelines. Key points include:
@@ -120,6 +137,12 @@ Please refer to `.cursorrules` for detailed development guidelines. Key points i
 ```
 dhh-mvp/
 ├── app/                    # Laravel application code
+│   ├── Http/              # Controllers and middleware
+│   │   ├── Controllers/   # Application controllers
+│   │   │   └── Auth/      # Authentication controllers
+│   │   └── Requests/      # Form request validation
+│   ├── Models/            # Eloquent models
+│   └── Exceptions/        # Exception handlers
 ├── database/              # Migrations, seeders, and factories
 ├── docs/                  # Project documentation
 │   └── features/         # Feature-specific documentation

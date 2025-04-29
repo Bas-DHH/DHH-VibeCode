@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -55,20 +55,22 @@ const Dashboard = ({ tasks }) => {
                                 };
 
                                 return (
-                                    <Card key={category} className="w-full">
-                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                            <CardTitle className="text-lg font-medium">
-                                                <span className="mr-2">{config.emoji}</span>
-                                                {config.label}
-                                            </CardTitle>
-                                            <Badge variant="secondary">{categoryTasks.length}</Badge>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm text-muted-foreground">
-                                                {categoryTasks.length} task{categoryTasks.length !== 1 ? 's' : ''} to complete
-                                            </p>
-                                        </CardContent>
-                                    </Card>
+                                    <Link href={`/tasks/category/${category}`} key={category}>
+                                        <Card className="w-full hover:bg-accent transition-colors">
+                                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                                <CardTitle className="text-lg font-medium">
+                                                    <span className="mr-2">{config.emoji}</span>
+                                                    {config.label}
+                                                </CardTitle>
+                                                <Badge variant="secondary">{categoryTasks.length}</Badge>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {categoryTasks.length} task{categoryTasks.length !== 1 ? 's' : ''} to complete
+                                                </p>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
                                 );
                             })}
                         </div>

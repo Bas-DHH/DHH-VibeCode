@@ -7,9 +7,16 @@ import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const getDashboardRoute = () => {
+        if (user.role === 'super_admin') {
+            return route('super-admin.dashboard');
+        } else if (user.role === 'admin') {
+            return route('admin.dashboard');
+        }
+        return route('dashboard');
+    };
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -25,56 +32,87 @@ export default function AuthenticatedLayout({ header, children }) {
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
+                                    href={getDashboardRoute()}
+                                    active={route().current('dashboard') || 
+                                            route().current('super-admin.dashboard') || 
+                                            route().current('admin.dashboard')}
                                 >
                                     Dashboard
                                 </NavLink>
+
+                                {user.role === 'super_admin' && (
+                                    <NavLink
+                                        href={route('super-admin.dashboard')}
+                                        active={route().current('super-admin.dashboard')}
+                                    >
+                                        Super Admin
+                                    </NavLink>
+                                )}
+
+                                {user.role === 'admin' && (
+                                    <NavLink
+                                        href={route('admin.dashboard')}
+                                        active={route().current('admin.dashboard')}
+                                    >
+                                        Admin Panel
+                                    </NavLink>
+                                )}
+
+                                {user.role === 'staff' && (
+                                    <NavLink
+                                        href={route('tasks.byCategory', { category: 'all' })}
+                                        active={route().current('tasks.byCategory')}
+                                    >
+                                        Tasks
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
+                            <div className="ms-3 flex items-center">
+                                <span className="me-2 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                                    {user.role.replace('_', ' ').toUpperCase()}
+                                </span>
+                                <div className="relative">
+                                    <Dropdown>
+                                        <Dropdown.Trigger>
+                                            <span className="inline-flex rounded-md">
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
                                                 >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
+                                                    {user.name}
+                                                    <svg
+                                                        className="-me-0.5 ms-2 h-4 w-4"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                    >
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            </span>
+                                        </Dropdown.Trigger>
 
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
+                                        <Dropdown.Content>
+                                            <Dropdown.Link href={route('profile.edit')}>
+                                                Profile
+                                            </Dropdown.Link>
+                                            <Dropdown.Link
+                                                href={route('logout')}
+                                                method="post"
+                                                as="button"
+                                            >
+                                                Log Out
+                                            </Dropdown.Link>
+                                        </Dropdown.Content>
+                                    </Dropdown>
+                                </div>
                             </div>
                         </div>
 
@@ -129,11 +167,40 @@ export default function AuthenticatedLayout({ header, children }) {
                 >
                     <div className="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
+                            href={getDashboardRoute()}
+                            active={route().current('dashboard') || 
+                                    route().current('super-admin.dashboard') || 
+                                    route().current('admin.dashboard')}
                         >
                             Dashboard
                         </ResponsiveNavLink>
+
+                        {user.role === 'super_admin' && (
+                            <ResponsiveNavLink
+                                href={route('super-admin.dashboard')}
+                                active={route().current('super-admin.dashboard')}
+                            >
+                                Super Admin
+                            </ResponsiveNavLink>
+                        )}
+
+                        {user.role === 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('admin.dashboard')}
+                                active={route().current('admin.dashboard')}
+                            >
+                                Admin Panel
+                            </ResponsiveNavLink>
+                        )}
+
+                        {user.role === 'staff' && (
+                            <ResponsiveNavLink
+                                href={route('tasks.byCategory', { category: 'all' })}
+                                active={route().current('tasks.byCategory')}
+                            >
+                                Tasks
+                            </ResponsiveNavLink>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">
@@ -143,6 +210,9 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
                             <div className="text-sm font-medium text-gray-500">
                                 {user.email}
+                            </div>
+                            <div className="mt-1 text-xs font-medium text-gray-500">
+                                {user.role.replace('_', ' ').toUpperCase()}
                             </div>
                         </div>
 
