@@ -1,0 +1,55 @@
+# Include persistent context files
+include:
+  - docs/DHH_PRD.md
+  - docs/README.md
+  - docs/features/DHH_FeatureSpec_*.md
+
+# Tech Stack
+- Backend: Laravel 10+ (PHP 8.3), MySQL
+- Frontend: Inertia.js + React + TypeScript + shadcn/ui
+- Styling: Tailwind CSS
+- Billing: Laravel Cashier with Mollie
+- Hosting: Traditional PHP/MySQL hosting
+- Localization: Dutch (default), English (planned)
+
+# Development Guidelines
+- Use PHP 8.3+ features where appropriate
+- Follow Laravel conventions and best practices
+- Use Eloquent ORM and FormRequest validation
+- Use Inertia for controller-to-component communication (no REST API)
+- Use TypeScript in React components
+- Use shadcn/ui for all UI elements (e.g., <Button>, <Card>, <Dialog>, etc.)
+- Use Tailwind utility classes for layout and spacing
+- Use Laravel Breeze or Jetstream for auth scaffolding
+- Admin creates users manually (no invite flow or self-registration)
+
+# Coding Standards
+- PHP Class/Enum names: PascalCase
+- PHP method names: camelCase
+- PHP variables/properties: snake_case
+- PHP constants/enums: SCREAMING_SNAKE_CASE
+- React component names: PascalCase
+- Use Laravel Pint for code formatting
+
+# Business Rules
+- Tasks belong to fixed categories (e.g., Temperature Control, Goods Receiving)
+- Daily tasks regenerate each day
+- Overdue tasks must be marked clearly (e.g., red badge via <Badge variant="destructive">)
+- Only one location per business in MVP
+- Manual task creation must be available
+- No image uploads in MVP
+- Use email/password login with "remember me" option
+
+# Design System
+- Primary color: #5095cc
+- Use class names like `bg-primary`, `text-primary`, `hover:bg-primary/90`
+- Layouts must be mobile-first and responsive
+
+# Testing and Documentation
+- Provide an overview of the testing strategy (e.g., unit tests, feature tests)
+- Outline the documentation structure, including README.md, usage examples, and API references
+
+# Misc
+- Avoid overengineering: prioritize speed and usability
+- When in doubt, follow Laravel conventions
+- No REST API unless absolutely required — use Inertia
