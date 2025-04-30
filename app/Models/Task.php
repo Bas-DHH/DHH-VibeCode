@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class Task extends Model
 {
@@ -48,11 +49,18 @@ class Task extends Model
     ];
 
     /**
+     * The relationships that should always be loaded.
+     *
+     * @var array
+     */
+    protected $with = ['category'];
+
+    /**
      * Get the business that owns the task.
      */
     public function business(): BelongsTo
     {
-        return $this->belongsTo(Business::class);
+        return $this->belongsTo(Business::class)->select(['id', 'name']);
     }
 
     /**
@@ -60,7 +68,7 @@ class Task extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->select(['id', 'name', 'email']);
     }
 
     /**
@@ -68,7 +76,7 @@ class Task extends Model
      */
     public function assignedUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_user_id');
+        return $this->belongsTo(User::class, 'assigned_user_id')->select(['id', 'name', 'email']);
     }
 
     /**
@@ -76,7 +84,7 @@ class Task extends Model
      */
     public function category(): BelongsTo
     {
-        return $this->belongsTo(TaskCategory::class, 'task_category_id');
+        return $this->belongsTo(TaskCategory::class, 'task_category_id')->select(['id', 'name_nl', 'name_en', 'icon', 'color']);
     }
 
     /**
@@ -135,7 +143,7 @@ class Task extends Model
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_id');
+        return $this->belongsTo(User::class, 'created_by_id')->select(['id', 'name', 'email']);
     }
 
     public function instances(): HasMany
@@ -143,24 +151,29 @@ class Task extends Model
         return $this->hasMany(TaskInstance::class);
     }
 
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
-    public function scopeDaily($query)
+    public function scopeDaily(Builder $query): Builder
     {
         return $query->where('frequency', 'daily');
     }
 
-    public function scopeWeekly($query)
+    public function scopeWeekly(Builder $query): Builder
     {
         return $query->where('frequency', 'weekly');
     }
 
-    public function scopeMonthly($query)
+    public function scopeMonthly(Builder $query): Builder
     {
         return $query->where('frequency', 'monthly');
+    }
+
+    public function scopeForBusiness(Builder $query, int $businessId): Builder
+    {
+        return $query->where('business_id', $businessId);
     }
 
     public function getNameAttribute(): string

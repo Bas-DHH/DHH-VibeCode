@@ -8,12 +8,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, Billable;
 
     /**
      * The attributes that are mass assignable.
@@ -42,6 +44,13 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var array
+     */
+    protected $with = ['business'];
 
     /**
      * Get the attributes that should be cast.
@@ -122,7 +131,17 @@ class User extends Authenticatable
 
     public function business(): BelongsTo
     {
-        return $this->belongsTo(Business::class);
+        return $this->belongsTo(Business::class)->select(['id', 'name']);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assigned_user_id')->select(['id', 'title', 'name_nl', 'name_en', 'description', 'frequency']);
+    }
+
+    public function taskInstances(): HasMany
+    {
+        return $this->hasMany(TaskInstance::class, 'assigned_user_id')->select(['id', 'task_id', 'scheduled_for', 'status', 'completed_at']);
     }
 
     /**
@@ -165,14 +184,9 @@ class User extends Authenticatable
             ->where('locked_until', '>', now());
     }
 
-    public function tasks()
+    public function scopeForBusiness(Builder $query, int $businessId): Builder
     {
-        return $this->hasMany(Task::class, 'assigned_user_id');
-    }
-
-    public function taskInstances()
-    {
-        return $this->hasMany(TaskInstance::class, 'assigned_user_id');
+        return $query->where('business_id', $businessId);
     }
 
     public function canManageUser(User $user): bool

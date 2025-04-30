@@ -23,6 +23,48 @@ include:
 - Use Laravel Breeze or Jetstream for auth scaffolding
 - Admin creates users manually (no invite flow or self-registration)
 
+# Code Structure and Organization
+- All code must be in the dhh-mvp directory
+- No duplicate directories or files allowed
+- Follow this directory structure:
+  - app/
+    - Console/
+    - Events/
+    - Exceptions/
+    - Http/
+      - Controllers/
+      - Middleware/
+      - Requests/
+      - Resources/
+    - Models/
+    - Notifications/
+    - Observers/
+    - Policies/
+    - Providers/
+    - Services/
+    - Traits/
+  - config/
+  - database/
+    - migrations/
+    - seeders/
+  - public/
+  - resources/
+    - js/
+    - views/
+  - routes/
+  - storage/
+  - tests/
+  - vendor/
+
+# Duplicate Prevention Rules
+- Before creating new files, check for existing implementations
+- Use the search function to verify no duplicates exist
+- If similar functionality exists, extend or modify existing code
+- Never create parallel implementations of the same feature
+- When in doubt, ask for clarification before creating new files
+- Use proper namespaces to avoid conflicts
+- Follow the single responsibility principle
+
 # Coding Standards
 - PHP Class/Enum names: PascalCase
 - PHP method names: camelCase
@@ -52,4 +94,4 @@ include:
 # Misc
 - Avoid overengineering: prioritize speed and usability
 - When in doubt, follow Laravel conventions
-- No REST API unless absolutely required — use Inertia
+- No REST API unless absolutely required — use Inertia 

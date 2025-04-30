@@ -4,42 +4,49 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Cashier\Billable;
 
 class Business extends Model
 {
-    use HasFactory;
+    use HasFactory, Billable;
 
     protected $fillable = [
-        'business_name',
-        'created_by',
-        'trial_starts_at',
+        'name',
+        'email',
         'trial_ends_at',
     ];
 
     protected $casts = [
-        'trial_starts_at' => 'datetime',
         'trial_ends_at' => 'datetime',
     ];
 
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function users(): HasMany
+    public function users()
     {
         return $this->hasMany(User::class);
     }
 
-    public function isOnTrial(): bool
+    public function tasks()
     {
-        return $this->trial_ends_at->isFuture();
+        return $this->hasMany(Task::class);
     }
 
-    public function trialDaysRemaining(): int
+    public function subscription()
     {
-        return $this->trial_ends_at->diffInDays(now());
+        return $this->hasOne(Subscription::class)->latest();
+    }
+
+    public function isOnTrial()
+    {
+        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+    }
+
+    public function isSubscribed()
+    {
+        return $this->subscription && $this->subscription->isActive();
+    }
+
+    public function hasActiveSubscription()
+    {
+        return $this->isSubscribed() || $this->isOnTrial();
     }
 } 

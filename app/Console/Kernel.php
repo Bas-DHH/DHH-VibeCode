@@ -35,6 +35,16 @@ class Kernel extends ConsoleKernel
 
         // Cleanup exports daily
         $schedule->command('exports:cleanup')->daily();
+
+        // Setup Mollie webhook (run once)
+        $schedule->command('mollie:setup-webhook')
+            ->daily()
+            ->withoutOverlapping();
+
+        // Setup Mollie plans (run once)
+        $schedule->command('mollie:setup-plans')
+            ->daily()
+            ->withoutOverlapping();
     }
 
     /**

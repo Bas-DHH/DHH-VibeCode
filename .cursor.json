@@ -1,0 +1,41 @@
+{
+  "contextFiles": [
+    ".cursorrules.md",
+    "dhh-mvp/docs/DHH_PRD.md",
+    "dhh-mvp/docs/README.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_CleaningRecords.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_CriticalCooking.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_DashboardNotifications.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_GoodsReceiving.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_LanguageLocalization.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_SubscriptionBilling.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_TaskExport.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_TemperatureControl.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_UserManagement.md",
+    "dhh-mvp/docs/features/DHH_FeatureSpec_VerificationDevices.md"
+  ],
+  "codeTracking": {
+    "enabled": true,
+    "trackDirectories": [
+      "dhh-mvp/app",
+      "dhh-mvp/tests",
+      "dhh-mvp/resources",
+      "dhh-mvp/routes"
+    ],
+    "ignorePatterns": [
+      "node_modules",
+      "vendor",
+      "storage",
+      "bootstrap/cache"
+    ],
+    "checkForDuplicates": true,
+    "trackFileTypes": [
+      ".php",
+      ".js",
+      ".vue",
+      ".blade.php",
+      ".css",
+      ".scss"
+    ]
+  }
+}

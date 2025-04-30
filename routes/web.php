@@ -6,6 +6,8 @@ use App\Http\Controllers\TaskInstanceController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\TaskExportController;
 use App\Http\Controllers\TaskAuditLogController;
+use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -58,6 +60,16 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/tasks/{taskInstance}/audit-log', [TaskAuditLogController::class, 'index'])
         ->name('tasks.audit-log');
+
+    // Subscription routes
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('/subscriptions/{plan}', [SubscriptionController::class, 'subscribe'])->name('subscriptions.subscribe');
+    Route::post('/subscriptions/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('/subscriptions/resume', [SubscriptionController::class, 'resume'])->name('subscriptions.resume');
+    Route::put('/subscriptions/{plan}', [SubscriptionController::class, 'update'])->name('subscriptions.update');
 });
+
+// Mollie webhook route
+Route::post('/webhook/mollie', [WebhookController::class, 'handleWebhook']);
 
 require __DIR__.'/auth.php';

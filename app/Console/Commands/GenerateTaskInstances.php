@@ -2,29 +2,25 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Task;
 use App\Services\TaskSchedulerService;
 use Illuminate\Console\Command;
 
 class GenerateTaskInstances extends Command
 {
     protected $signature = 'tasks:generate-instances';
-    protected $description = 'Generate task instances for the current day';
+    protected $description = 'Generate task instances for all active recurring tasks';
 
-    public function handle(TaskSchedulerService $scheduler)
+    public function handle(TaskSchedulerService $scheduler): int
     {
-        $this->info('Generating task instances...');
-
-        $tasks = Task::where('is_active', true)->get();
-        $count = 0;
-
-        foreach ($tasks as $task) {
-            if ($scheduler->shouldGenerateInstance($task)) {
-                $scheduler->generateDailyInstance($task);
-                $count++;
-            }
+        $this->info('Starting task instance generation...');
+        
+        try {
+            $scheduler->generateTaskInstances();
+            $this->info('Task instances generated successfully.');
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $this->error('Failed to generate task instances: ' . $e->getMessage());
+            return Command::FAILURE;
         }
-
-        $this->info("Generated {$count} task instances.");
     }
 } 

@@ -6,12 +6,28 @@ use App\Models\Task;
 use App\Models\TaskCategory;
 use App\Models\TaskInstance;
 use App\Models\User;
+use App\Http\Requests\TaskRequest;
+use App\Http\Resources\TaskResource;
+use App\Interfaces\TaskSchedulerInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TaskController extends Controller
 {
+    private const CACHE_TTL = 3600; // 1 hour
+    private const CACHE_KEY_CATEGORIES = 'task_categories';
+    private const CACHE_KEY_USERS = 'business_users_';
+
+    private TaskSchedulerInterface $taskScheduler;
+
+    public function __construct(TaskSchedulerInterface $taskScheduler)
+    {
+        $this->taskScheduler = $taskScheduler;
+    }
+
     public function index(Request $request)
     {
         $tasks = Task::with(['category', 'assignedUser', 'instances'])
@@ -35,10 +51,16 @@ class TaskController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $categories = Cache::remember(
+            self::CACHE_KEY_CATEGORIES,
+            self::CACHE_TTL,
+            fn () => TaskCategory::select(['id', 'name_nl', 'name_en', 'icon', 'color'])->get()
+        );
+
         return Inertia::render('Tasks/Index', [
-            'tasks' => $tasks,
+            'tasks' => TaskResource::collection($tasks),
             'filters' => $request->only(['category', 'frequency', 'status']),
-            'categories' => TaskCategory::all(),
+            'categories' => $categories,
             'frequencies' => ['daily', 'weekly', 'monthly'],
         ]);
     }
@@ -47,40 +69,45 @@ class TaskController extends Controller
     {
         $this->authorize('create', Task::class);
 
+        $users = Cache::remember(
+            self::CACHE_KEY_USERS . Auth::user()->business_id,
+            self::CACHE_TTL,
+            fn () => User::where('business_id', Auth::user()->business_id)
+                ->select(['id', 'name', 'email', 'role'])
+                ->get()
+        );
+
         return Inertia::render('Tasks/Create', [
-            'categories' => TaskCategory::all(),
-            'users' => User::where('business_id', Auth::user()->business_id)->get(),
+            'categories' => TaskCategory::select(['id', 'name_nl', 'name_en', 'icon', 'color'])->get(),
+            'users' => $users,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(TaskRequest $request)
     {
-        $this->authorize('create', Task::class);
+        try {
+            DB::beginTransaction();
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'name_nl' => 'required|string|max:255',
-            'name_en' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'instructions_nl' => 'nullable|string',
-            'instructions_en' => 'nullable|string',
-            'frequency' => 'required|in:daily,weekly,monthly',
-            'scheduled_time' => 'required|date_format:H:i',
-            'day_of_week' => 'required_if:frequency,weekly|integer|between:0,6',
-            'day_of_month' => 'required_if:frequency,monthly|integer|between:1,31',
-            'task_category_id' => 'required|exists:task_categories,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
-            'is_active' => 'boolean',
-        ]);
+            $task = Task::create([
+                ...$request->validated(),
+                'business_id' => Auth::user()->business_id,
+            ]);
 
-        $task = Task::create([
-            ...$validated,
-            'business_id' => Auth::user()->business_id,
-            'created_by_id' => Auth::id(),
-        ]);
+            $this->taskScheduler->generateTaskInstances();
 
-        return redirect()->route('tasks.index')
-            ->with('success', __('Task created successfully.'));
+            DB::commit();
+
+            Cache::forget(self::CACHE_KEY_CATEGORIES);
+            Cache::forget(self::CACHE_KEY_USERS . Auth::user()->business_id);
+
+            return redirect()->route('tasks.index')
+                ->with('success', __('Task created successfully.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            report($e);
+            return redirect()->back()
+                ->with('error', __('Failed to create task. Please try again.'));
+        }
     }
 
     public function show(Task $task)
@@ -88,7 +115,8 @@ class TaskController extends Controller
         $this->authorize('view', $task);
 
         $task->load(['category', 'assignedUser', 'instances' => function ($query) {
-            $query->orderBy('scheduled_for', 'desc');
+            $query->orderBy('scheduled_for', 'desc')
+                ->select(['id', 'task_id', 'scheduled_for', 'status', 'completed_at', 'input_data']);
         }]);
 
         return Inertia::render('Tasks/Show', [
@@ -100,95 +128,149 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
 
+        $users = Cache::remember(
+            self::CACHE_KEY_USERS . Auth::user()->business_id,
+            self::CACHE_TTL,
+            fn () => User::where('business_id', Auth::user()->business_id)
+                ->select(['id', 'name', 'email', 'role'])
+                ->get()
+        );
+
         return Inertia::render('Tasks/Edit', [
-            'task' => $task,
-            'categories' => TaskCategory::all(),
-            'users' => User::where('business_id', Auth::user()->business_id)->get(),
+            'task' => $task->load(['category', 'assignedUser']),
+            'categories' => TaskCategory::select(['id', 'name_nl', 'name_en', 'icon', 'color'])->get(),
+            'users' => $users,
         ]);
     }
 
-    public function update(Request $request, Task $task)
+    public function update(TaskRequest $request, Task $task)
     {
         $this->authorize('update', $task);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'name_nl' => 'required|string|max:255',
-            'name_en' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'instructions_nl' => 'nullable|string',
-            'instructions_en' => 'nullable|string',
-            'frequency' => 'required|in:daily,weekly,monthly',
-            'scheduled_time' => 'required|date_format:H:i',
-            'day_of_week' => 'required_if:frequency,weekly|integer|between:0,6',
-            'day_of_month' => 'required_if:frequency,monthly|integer|between:1,31',
-            'task_category_id' => 'required|exists:task_categories,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
-            'is_active' => 'boolean',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $task->update($validated);
+            $task->update($request->validated());
+            $this->taskScheduler->generateTaskInstances();
 
-        return redirect()->route('tasks.index')
-            ->with('success', __('Task updated successfully.'));
+            DB::commit();
+
+            Cache::forget(self::CACHE_KEY_CATEGORIES);
+            Cache::forget(self::CACHE_KEY_USERS . Auth::user()->business_id);
+
+            return redirect()->route('tasks.index')
+                ->with('success', __('Task updated successfully.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            report($e);
+            return redirect()->back()
+                ->with('error', __('Failed to update task. Please try again.'));
+        }
     }
 
     public function destroy(Task $task)
     {
         $this->authorize('delete', $task);
 
-        $task->delete();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('tasks.index')
-            ->with('success', __('Task deleted successfully.'));
+            $task->delete();
+
+            DB::commit();
+
+            Cache::forget(self::CACHE_KEY_CATEGORIES);
+            Cache::forget(self::CACHE_KEY_USERS . Auth::user()->business_id);
+
+            return redirect()->route('tasks.index')
+                ->with('success', __('Task deleted successfully.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            report($e);
+            return redirect()->back()
+                ->with('error', __('Failed to delete task. Please try again.'));
+        }
     }
 
     public function complete(TaskInstance $instance, Request $request)
     {
         $this->authorize('complete', $instance);
 
-        $validated = $request->validate([
-            'input_data' => 'required|array',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $instance->update([
-            'status' => 'completed',
-            'completed_by_id' => Auth::id(),
-            'completed_at' => now(),
-            'input_data' => $validated['input_data'],
-            'notes' => $validated['notes'],
-        ]);
+            $validated = $request->validate([
+                'input_data' => 'required|array',
+                'notes' => 'nullable|string',
+            ]);
 
-        return redirect()->back()
-            ->with('success', __('Task completed successfully.'));
+            $instance->update([
+                'status' => 'completed',
+                'completed_by_id' => Auth::id(),
+                'completed_at' => now(),
+                'input_data' => $validated['input_data'],
+                'notes' => $validated['notes'],
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()
+                ->with('success', __('Task completed successfully.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', __('Failed to complete task. Please try again.'));
+        }
     }
 
     public function editCompleted(TaskInstance $instance, Request $request)
     {
         $this->authorize('editCompleted', $instance);
 
-        $validated = $request->validate([
-            'input_data' => 'required|array',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $oldValues = $instance->getOriginal();
-        $instance->update($validated);
+            $validated = $request->validate([
+                'input_data' => 'required|array',
+                'notes' => 'nullable|string',
+            ]);
 
-        return redirect()->back()
-            ->with('success', __('Task updated successfully.'));
+            $oldValues = $instance->getOriginal();
+            $instance->update($validated);
+
+            DB::commit();
+
+            return redirect()->back()
+                ->with('success', __('Task updated successfully.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', __('Failed to update task. Please try again.'));
+        }
     }
 
     public function toggleStatus(Task $task)
     {
         $this->authorize('update', $task);
 
-        $task->update([
-            'is_active' => !$task->is_active,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->back()
-            ->with('success', __('Task status updated successfully.'));
+            $task->update([
+                'is_active' => !$task->is_active,
+            ]);
+
+            DB::commit();
+
+            Cache::forget(self::CACHE_KEY_CATEGORIES);
+            Cache::forget(self::CACHE_KEY_USERS . Auth::user()->business_id);
+
+            return redirect()->back()
+                ->with('success', __('Task status updated successfully.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', __('Failed to update task status. Please try again.'));
+        }
     }
 } 
