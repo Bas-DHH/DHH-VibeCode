@@ -11,22 +11,22 @@ class TaskAuditLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'task_id',
+        'task_instance_id',
         'user_id',
-        'action',
         'old_values',
         'new_values',
-        'notes'
+        'action',
+        'notes',
     ];
 
     protected $casts = [
         'old_values' => 'array',
-        'new_values' => 'array'
+        'new_values' => 'array',
     ];
 
-    public function task(): BelongsTo
+    public function taskInstance(): BelongsTo
     {
-        return $this->belongsTo(Task::class);
+        return $this->belongsTo(TaskInstance::class);
     }
 
     public function user(): BelongsTo

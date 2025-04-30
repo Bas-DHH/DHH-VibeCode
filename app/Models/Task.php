@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
 
     /**
      * The attributes that are mass assignable.
@@ -17,20 +18,21 @@ class Task extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'business_id',
-        'user_id',
-        'task_category_id',
         'title',
+        'name_nl',
+        'name_en',
         'description',
-        'due_date',
-        'completed_at',
-        'status',
-        'input_data',
+        'instructions_nl',
+        'instructions_en',
         'frequency',
         'scheduled_time',
         'day_of_week',
         'day_of_month',
-        'assigned_user_id'
+        'is_active',
+        'business_id',
+        'task_category_id',
+        'assigned_user_id',
+        'created_by_id',
     ];
 
     /**
@@ -39,10 +41,10 @@ class Task extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'due_date' => 'datetime',
-        'completed_at' => 'datetime',
-        'input_data' => 'array',
-        'scheduled_time' => 'datetime'
+        'is_active' => 'boolean',
+        'day_of_week' => 'integer',
+        'day_of_month' => 'integer',
+        'scheduled_time' => 'datetime',
     ];
 
     /**
@@ -129,5 +131,45 @@ class Task extends Model
             'completed_at' => now(),
             'input_data' => $inputData
         ]);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
+    }
+
+    public function instances(): HasMany
+    {
+        return $this->hasMany(TaskInstance::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeDaily($query)
+    {
+        return $query->where('frequency', 'daily');
+    }
+
+    public function scopeWeekly($query)
+    {
+        return $query->where('frequency', 'weekly');
+    }
+
+    public function scopeMonthly($query)
+    {
+        return $query->where('frequency', 'monthly');
+    }
+
+    public function getNameAttribute(): string
+    {
+        return app()->getLocale() === 'nl' ? $this->name_nl : $this->name_en;
+    }
+
+    public function getInstructionsAttribute(): string
+    {
+        return app()->getLocale() === 'nl' ? $this->instructions_nl : $this->instructions_en;
     }
 }

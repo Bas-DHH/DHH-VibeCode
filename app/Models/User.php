@@ -8,11 +8,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -24,6 +25,11 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_active',
+        'language',
+        'last_login_at',
+        'failed_login_attempts',
+        'locked_until',
         'business_id',
     ];
 
@@ -47,6 +53,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
+            'locked_until' => 'datetime',
         ];
     }
 
@@ -72,6 +81,43 @@ class User extends Authenticatable
     public function isStaff(): bool
     {
         return $this->role === 'staff';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->locked_until && $this->locked_until->isFuture();
+    }
+
+    public function incrementFailedLoginAttempts(): void
+    {
+        $this->increment('failed_login_attempts');
+        
+        if ($this->failed_login_attempts >= 5) {
+            $this->locked_until = now()->addMinutes(30);
+            $this->save();
+        }
+    }
+
+    public function resetFailedLoginAttempts(): void
+    {
+        $this->update([
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+        ]);
+    }
+
+    public function updateLastLogin(): void
+    {
+        $this->update([
+            'last_login_at' => now(),
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+        ]);
     }
 
     public function business(): BelongsTo
@@ -101,5 +147,53 @@ class User extends Authenticatable
     public function scopeStaff(Builder $query): Builder
     {
         return $query->where('role', 'staff');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('is_active', false);
+    }
+
+    public function scopeLocked(Builder $query): Builder
+    {
+        return $query->whereNotNull('locked_until')
+            ->where('locked_until', '>', now());
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'assigned_user_id');
+    }
+
+    public function taskInstances()
+    {
+        return $this->hasMany(TaskInstance::class, 'assigned_user_id');
+    }
+
+    public function canManageUser(User $user): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($this->isAdmin()) {
+            return $this->business_id === $user->business_id;
+        }
+
+        return false;
+    }
+
+    public function canManageBusiness(Business $business): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->isAdmin() && $this->business_id === $business->id;
     }
 }

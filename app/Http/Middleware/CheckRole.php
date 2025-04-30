@@ -15,7 +15,11 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!$request->user() || !$this->hasRole($request->user(), $role)) {
+        if (!$request->user()) {
+            return redirect()->route('login');
+        }
+
+        if (!$this->hasRole($request->user(), $role)) {
             abort(403, 'Unauthorized action.');
         }
 

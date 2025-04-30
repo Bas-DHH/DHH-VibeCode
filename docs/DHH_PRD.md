@@ -53,7 +53,7 @@ The DHH MVP is designed for small to mid-sized hospitality businesses, particula
 - **Pain Points**:
   - Forget tasks or are unsure what needs to be done and when.
   - Paper-based systems feel like an afterthought or waste of time.
-  - Get blamed for missed tasks they weren’t even clearly assigned.
+  - Get blamed for missed tasks they weren't even clearly assigned.
 - **Goals**:
   - Know exactly what is expected each shift.
   - Quickly complete tasks without friction.
@@ -68,6 +68,18 @@ The DHH MVP is designed for small to mid-sized hospitality businesses, particula
   - Access clear, timestamped task histories.
   - Verify that critical tasks (e.g., temperature checks) were done correctly and on time.
   - Trust that the hygiene system used by the business is structured and reliable.
+
+### 4.4 Platform Super Admin (Internal Role)
+- **Responsibilities**: Manage the platform globally, handle support, and ensure system integrity.
+- **Pain Points**:
+  - Need to quickly resolve user issues and system problems.
+  - Must maintain platform security and compliance.
+  - Need to handle subscription and billing issues efficiently.
+- **Goals**:
+  - Provide quick support to businesses and users.
+  - Maintain platform security and data integrity.
+  - Ensure smooth operation of subscription and billing systems.
+  - Handle critical account management tasks.
 
 ## 5. Core Features
 
@@ -93,8 +105,14 @@ The MVP version of De Horeca Helper (DHH) will include only the features necessa
 - Staff can view historical task data (read-only).
 
 ### 5.3 User Roles & Access Control
-- Admin role (business owner/manager): full access to all settings, task history, user management, and exports.
-- Staff role: can view and complete tasks and view task history, but not edit settings or completed tasks.
+- **Super Admin role** (internal platform management):
+  - Global access to all businesses and accounts
+  - Manage subscriptions and billing
+  - Handle support and account recovery
+  - Impersonate users for debugging
+  - Delete or reassign business accounts
+- **Admin role** (business owner/manager): full access to all settings, task history, user management, and exports.
+- **Staff role**: can view and complete tasks and view task history, but not edit settings or completed tasks.
 - Only Admins can edit completed tasks; all edits are logged with timestamp and user ID.
 
 ### 5.4 Task History, Export & Integrity
@@ -109,11 +127,23 @@ The MVP version of De Horeca Helper (DHH) will include only the features necessa
 - No push or SMS notifications included in MVP.
 
 ### 5.6 Minimal Dashboard View
-- Admin dashboard shows: total tasks today, overdue tasks, and completed tasks.
-- Staff dashboard shows: open tasks, what’s overdue, and what’s left to do today.
+- **Super Admin dashboard** shows:
+  - Total active businesses
+  - Subscription status overview
+  - Support tickets and alerts
+  - System health metrics
+- **Admin dashboard** shows:
+  - Total tasks today
+  - Overdue tasks
+  - Completed tasks
+- **Staff dashboard** shows:
+  - Open tasks
+  - What's overdue
+  - What's left to do today
 
 ### 5.7 User & Business Setup
 - Business accounts represent single locations (multi-location not supported in MVP).
+- Super Admin can create and manage all business accounts.
 - Admin creates staff users directly via name and email (no invite flow required).
 - Staff receive welcome email with temporary password and login link.
 
@@ -146,7 +176,7 @@ As a manager, I want to export completed task data by date range, so I can share
 As a manager, I want to edit a completed task (with history tracking), so I can correct user errors without losing audit integrity.
 
 **Story E: Monitoring remotely**  
-As a manager, I want to check task progress and overdue tasks even when I’m not on location, so I can stay in control from anywhere.
+As a manager, I want to check task progress and overdue tasks even when I'm not on location, so I can stay in control from anywhere.
 
 **Story F: Receiving daily updates**  
 As a manager, I want to receive a daily summary email with overdue tasks, so I stay informed without logging in constantly.
@@ -154,7 +184,7 @@ As a manager, I want to receive a daily summary email with overdue tasks, so I s
 ### 6.2 Staff / Employee
 
 **Story G: Seeing what I need to do**  
-As a staff member, I want to log in and see only today’s tasks, so I know exactly what to do.
+As a staff member, I want to log in and see only today's tasks, so I know exactly what to do.
 
 **Story H: Completing a task**  
 As a staff member, I want to quickly fill in a task with the required information, so I can move on with my shift.
@@ -173,8 +203,9 @@ This section outlines the structure of the MVP application — how key component
 
 ### 7.1 Main Navigation Structure (Mobile Web App)
 - **Home / Dashboard**
-  - Daily task overview
-  - Count of open, completed, and overdue tasks
+  - Super Admin: Global platform overview
+  - Admin: Daily task overview
+  - Staff: Personal task overview
 - **Tasks**
   - List of all active tasks grouped by category and due date
   - Filter by today, overdue, or specific category
@@ -187,15 +218,21 @@ This section outlines the structure of the MVP application — how key component
   - Task configuration (create/edit recurring tasks)
   - Export center (download CSV/PDF of past tasks)
   - Subscription settings
+- **Super Admin (only visible to Super Admins)**
+  - Business management
+  - Subscription oversight
+  - Support tools
+  - System settings
 
 ### 7.2 User Role-Based Access
 
-| Section      | Admin Access                    | Staff Access         |
-|--------------|----------------------------------|-----------------------|
-| Dashboard    | Full                             | Own tasks overview    |
-| Tasks        | View, complete, and manage tasks | View & complete tasks |
-| History      | Full + export                    | Read-only             |
-| Admin Panel  | Full                             | Hidden                |
+| Section      | Super Admin Access           | Admin Access                    | Staff Access         |
+|--------------|-------------------------------|----------------------------------|-----------------------|
+| Dashboard    | Global platform overview      | Full business overview           | Own tasks overview    |
+| Tasks        | View all                     | View, complete, and manage tasks | View & complete tasks |
+| History      | View all + export            | Full + export                    | Read-only             |
+| Admin Panel  | Full                         | Full                             | Hidden                |
+| Super Admin  | Full                         | Hidden                           | Hidden                |
 
 Admins, especially in small or owner-operated businesses, may also be responsible for performing hygiene tasks. Therefore, they must have full task completion access in addition to management capabilities.
 
@@ -207,7 +244,7 @@ Admins, especially in small or owner-operated businesses, may also be responsibl
    - Summary of task status
    - Entry point for deeper actions
 3. **Tasks**
-   - Today’s tasks (default view)
+   - Today's tasks (default view)
    - Overdue tasks shown at top
    - Task detail → input fields → mark as complete
 4. **History**
@@ -251,7 +288,7 @@ This section outlines the high-level technical considerations and constraints fo
   - Strong backend capabilities (roles, billing, logs)
   - Compatibility with existing hosting (no need for Node.js or Vercel)
   - Scalability for multi-location, audit logging, and advanced admin features post-MVP
-- This setup supports the DHH **“vibecoding”** workflow while ensuring a future-proof backend foundation.
+- This setup supports the DHH **"vibecoding"** workflow while ensuring a future-proof backend foundation.
 - Estimated MVP-stage costs:
   - Hosting: ~€10–€30/month (existing server)
   - Domain & SSL: Likely included with hosting
@@ -284,7 +321,7 @@ These requirements define how the DHH MVP should behave in terms of performance,
 
 ### 10.4 Usability & Accessibility
 - The platform must be mobile-first and intuitive, with minimal training needed for staff users.
-- Interface language must match the user’s browser setting or selected language (Dutch and English supported).
+- Interface language must match the user's browser setting or selected language (Dutch and English supported).
 - Text contrast and tap targets must follow WCAG AA accessibility guidelines.
 
 ### 10.5 Maintainability

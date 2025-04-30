@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Business;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,6 +13,8 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
+    protected $model = User::class;
+
     /**
      * The current password being used by the factory.
      */
@@ -24,12 +28,18 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'name' => $this->faker->name(),
+            'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => bcrypt('password'),
             'remember_token' => Str::random(10),
-            'role' => fake()->randomElement(['admin', 'staff']),
+            'role' => 'staff',
+            'is_active' => true,
+            'language' => 'nl',
+            'last_login_at' => null,
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+            'business_id' => Business::factory(),
         ];
     }
 
@@ -48,9 +58,12 @@ class UserFactory extends Factory
      */
     public function superAdmin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'super_admin',
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'super_admin',
+                'business_id' => null, // Super admins don't belong to a business
+            ];
+        });
     }
 
     /**
@@ -58,9 +71,11 @@ class UserFactory extends Factory
      */
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'admin',
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'admin',
+            ];
+        });
     }
 
     /**
@@ -68,8 +83,38 @@ class UserFactory extends Factory
      */
     public function staff(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'staff',
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'staff',
+            ];
+        });
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'is_active' => false,
+            ];
+        });
+    }
+
+    public function locked(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'locked_until' => now()->addMinutes(30),
+                'failed_login_attempts' => 5,
+            ];
+        });
+    }
+
+    public function withBusiness(Business $business): static
+    {
+        return $this->state(function (array $attributes) use ($business) {
+            return [
+                'business_id' => $business->id,
+            ];
+        });
     }
 }

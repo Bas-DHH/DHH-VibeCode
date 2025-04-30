@@ -26,6 +26,12 @@ Built with **Laravel**, **Inertia.js**, and **React**, it helps teams manage HAC
 - Mobile-first responsive design
 - Localization support (Dutch, English)
 - Subscription billing with Mollie
+- Task export functionality:
+  - CSV export of completed tasks
+  - Date range and category filtering
+  - Batch processing for large datasets
+  - Admin-only access with audit logging
+  - Automatic cleanup of old exports
 
 ---
 
@@ -65,6 +71,13 @@ php artisan migrate --seed
 ```bash
 php artisan test
 ```
+
+The test suite includes:
+- Unit tests for CSV generation
+- Feature tests for export functionality
+- Permission tests for role-based access
+- Performance tests for large datasets
+- Error handling tests
 
 ---
 
