@@ -8,6 +8,10 @@ use App\Http\Controllers\TaskExportController;
 use App\Http\Controllers\TaskAuditLogController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\CleaningTaskController;
+use App\Http\Controllers\CookingTaskController;
+use App\Http\Controllers\TemperatureTaskController;
+use App\Http\Controllers\GoodsReceivingTaskController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -67,6 +71,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/subscriptions/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
     Route::post('/subscriptions/resume', [SubscriptionController::class, 'resume'])->name('subscriptions.resume');
     Route::put('/subscriptions/{plan}', [SubscriptionController::class, 'update'])->name('subscriptions.update');
+
+    // Cleaning Tasks
+    Route::post('/tasks/cleaning/complete', [CleaningTaskController::class, 'complete'])
+        ->name('tasks.cleaning.complete');
+        
+    // Cooking Tasks
+    Route::post('/tasks/cooking/complete', [CookingTaskController::class, 'complete'])
+        ->name('tasks.cooking.complete');
+        
+    // Temperature Tasks
+    Route::post('/tasks/temperature/complete', [TemperatureTaskController::class, 'complete'])
+        ->name('tasks.temperature.complete');
+        
+    // Goods Receiving Tasks
+    Route::post('/tasks/goods-receiving/complete', [GoodsReceivingTaskController::class, 'complete'])
+        ->name('tasks.goods-receiving.complete');
 });
 
 // Mollie webhook route

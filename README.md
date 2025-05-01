@@ -83,6 +83,48 @@ DHH MVP is designed to help hospitality businesses maintain and track essential 
 - **Statuses**: pending, done, overdue
 - **Frequencies**: daily, weekly, monthly
 
+### Task Verification Features
+
+The application includes comprehensive task verification features for different types of hygiene tasks:
+
+#### Cleaning Tasks
+- Form component with cleaning and disinfection status tracking
+- Notes and corrective action fields
+- Validation for required fields
+- Multi-language support (Dutch/English)
+
+#### Critical Cooking Tasks
+- Temperature monitoring with minimum threshold
+- Cooking time tracking
+- Visual inspection checks
+- Corrective action requirements for failed checks
+- Multi-language support
+
+#### Temperature Control Tasks
+- Temperature range validation (min/max thresholds)
+- Location tracking
+- Notes and corrective action fields
+- Multi-language support
+
+#### Goods Receiving Tasks
+- Supplier and product details
+- Batch number and expiry date tracking
+- Temperature checks (when required)
+- Packaging integrity verification
+- Visual inspection options
+- Corrective action handling
+- Multi-language support
+
+Common features across all task types:
+- Task completion status tracking (completed/warning)
+- Corrective action requirements when checks fail
+- Business-specific access control
+- Audit trail logging
+- Event dispatching on completion
+- Database transaction handling
+- Form validation
+- Multi-language support (Dutch/English)
+
 ### Development Tools
 - Factory for generating test tasks
 - Seeder for populating the database with example data
